@@ -1,7 +1,7 @@
 .env
 .vscode/
 
-engines/
+engines/*
 !engines/.gitkeep
 !engines/wrapper.py
 !engines/README.md
