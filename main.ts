@@ -57,7 +57,8 @@ export async function searchTorrents(engine: string, query: string) {
 }
 
 export async function searchToRSS(engine: string, query: string, reg_filter?: RegExp) {
-  const { res } = await searchTorrents(engine, query);
+  const { res, err, success } = await searchTorrents(engine, query);
+  if (!success) throw new Error(err);
   const filtered = res
     .filter((torrent) => !reg_filter || reg_filter.test(torrent.dn));
   return {
@@ -91,10 +92,16 @@ const router = new Router();
 router.get("/:engine/:query", async (context) => {
   const { engine, query, filter } = getQuery(context, { mergeParams: true });
   console.log(`Searching ${engine} for ${query} with filter ${filter}`)
-  const { rss, data } = await searchToRSS(engine, query, filter ? new RegExp(filter) : undefined);
-  console.log(`Found ${data.length} results for ${query} with filter ${filter} on ${engine}`)
-  context.response.body = rss;
-  context.response.headers.set("Content-Type", "application/xml");
+  try {
+    const { rss, data } = await searchToRSS(engine, query, filter ? new RegExp(filter) : undefined);
+    console.log(`Found ${data.length} results for ${query} with filter ${filter} on ${engine}`)
+    context.response.body = rss;
+    context.response.headers.set("Content-Type", "application/xml");
+  } catch (e) {
+    console.error(e);
+    context.response.body = e.message;
+    context.response.headers.set("Content-Type", "text/plain");
+  }
 });
 
 const app = new Application();
