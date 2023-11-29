@@ -1,0 +1,6 @@
+[submodule "include/search-plugins"]
+	path = include/search-plugins
+	url = https://github.com/qbittorrent/search-plugins/
+[submodule "include/qBittorrent"]
+	path = include/qBittorrent
+	url = https://github.com/qbittorrent/qBittorrent/
