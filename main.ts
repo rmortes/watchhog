@@ -109,13 +109,22 @@ export async function searchToRSS(engine: string, query: string, reg_filter?: Re
 const router = new Router();
 router.get("/rss/:engine/:query", async (context) => {
   const { engine, query, filter } = getQuery(context, { mergeParams: true });
+  if (!(await listEngines()).includes(engine)) {
+    console.log(`Engine ${engine} does not exist`)
+    context.response.body = `Engine ${engine} does not exist`;
+    context.response.headers.set("Content-Type", "text/plain");
+    return;
+  }
+
+  const startTime = Date.now();
   console.log(`Searching ${engine} for ${query} with filter ${filter}`)
   try {
     const { rss, data } = await searchToRSS(engine, query, filter ? new RegExp(filter) : undefined);
-    console.log(`Found ${data.length} results for ${query} with filter ${filter} on ${engine}`)
+    console.log(`Found ${data.length} results for ${query} with filter ${filter} on ${engine} in ${Date.now() - startTime}ms`)
     context.response.body = rss;
     context.response.headers.set("Content-Type", "application/xml");
   } catch (e) {
+    console.log(`Error searching ${engine} for ${query} with filter ${filter} in ${Date.now() - startTime}ms`)
     console.error(e);
     context.response.body = e.message;
     context.response.headers.set("Content-Type", "text/plain");
@@ -123,7 +132,10 @@ router.get("/rss/:engine/:query", async (context) => {
 }).get("/engines", async (context) => {
   context.response.body = JSON.stringify(await listEngines())
   context.response.headers.set("Content-Type", "application/json");
-});
+}).get("/:engine/:query", (context) => {
+  const { engine, query } = getQuery(context, { mergeParams: true });
+  context.response.redirect(`/rss/${engine}/${query}`)
+})
 
 const app = new Application();
 app.use(router.routes());
