@@ -3,6 +3,24 @@ import { stringify } from "https://deno.land/x/xml@2.1.3/mod.ts"
 import { Application, Router } from "https://deno.land/x/oak@v12.6.1/mod.ts";
 import { getQuery } from "https://deno.land/x/oak@v12.6.1/helpers.ts";
 
+const INTERNAL_FILES = [
+  "wrapper.py",
+  "helpers.py",
+  "nova2.py",
+  "nova2dl.py",
+  "novaprinter.py",
+  "socks.py",
+];
+async function listEngines() {
+  const engines = []
+  for await (const file of Deno.readDir("engines")) {
+    if (file.isFile && !INTERNAL_FILES.includes(file.name) && file.name.endsWith(".py")) {
+      engines.push(file.name.replace(".py", ""));
+    }
+  }
+  return engines;
+}
+
 export interface TorrentURL {
   url: string;
   xt: string;
@@ -89,7 +107,7 @@ export async function searchToRSS(engine: string, query: string, reg_filter?: Re
 // http://192.168.100.242:8080/?engine=nyaasi&query=Goblin%20slayer&filter=\[SubsPlease\]%20Goblin%20Slayer%20S[0-9]%20-%20[0-9][0-9].*\(1080p\)%20.*\.mkv
 
 const router = new Router();
-router.get("/:engine/:query", async (context) => {
+router.get("/rss/:engine/:query", async (context) => {
   const { engine, query, filter } = getQuery(context, { mergeParams: true });
   console.log(`Searching ${engine} for ${query} with filter ${filter}`)
   try {
@@ -102,6 +120,9 @@ router.get("/:engine/:query", async (context) => {
     context.response.body = e.message;
     context.response.headers.set("Content-Type", "text/plain");
   }
+}).get("/engines", async (context) => {
+  context.response.body = JSON.stringify(await listEngines())
+  context.response.headers.set("Content-Type", "application/json");
 });
 
 const app = new Application();

@@ -53,7 +53,7 @@ deno compile --allow-all main.ts
 
 ## How to use?
 
-This project provides a single URL
+This project provides just two endpoints:
 
 ```
 /{search engine}/{query}?filter={regex}
@@ -70,3 +70,9 @@ This project provides a single URL
 The default port is `8080`, and can't be changed at the moment. I mean, you can
 tweak the source code, it's like 100 lines, and you can event redirect the port
 using Docker
+
+```
+/engines
+```
+
+This endpoint will return a list of all the engines available.
